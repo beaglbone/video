@@ -6,7 +6,7 @@ from telethon.sessions import StringSession
 api_id = int(os.environ["API_ID"])
 api_hash = os.environ["API_HASH"]
 string_session = os.environ["SESSION"]
-chat_id = int(os.environ["CHAT_ID"])
+chat_id = int(os.environ["CHAT_ID"])  # GROUP ID
 
 VIDEO_DIR = "videos"
 
@@ -19,8 +19,7 @@ client = TelegramClient(
 async def main():
     await client.start()
 
-    # 🔑 THIS IS THE IMPORTANT PART
-    entity = await client.get_entity(chat_id)
+    print("📌 Sending to group:", chat_id)
 
     for file in os.listdir(VIDEO_DIR):
         if file.endswith(".mp4"):
@@ -28,7 +27,7 @@ async def main():
             print("📤 Sending:", path)
 
             await client.send_file(
-                entity,
+                chat_id,              # ✅ GROUP
                 path,
                 video=True,
                 supports_streaming=True,
