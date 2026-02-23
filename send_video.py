@@ -1,4 +1,5 @@
 import os
+import asyncio
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 
@@ -9,7 +10,6 @@ chat_id = int(os.environ["CHAT_ID"])
 
 VIDEO_DIR = "videos"
 
-# ✅ IMPORTANT FIX HERE
 client = TelegramClient(
     StringSession(string_session),
     api_id,
@@ -19,25 +19,23 @@ client = TelegramClient(
 async def main():
     await client.start()
 
+    # 🔑 THIS IS THE IMPORTANT PART
+    entity = await client.get_entity(chat_id)
+
     for file in os.listdir(VIDEO_DIR):
         if file.endswith(".mp4"):
             path = os.path.join(VIDEO_DIR, file)
             print("📤 Sending:", path)
 
             await client.send_file(
-                chat_id,
+                entity,
                 path,
-                video=True,              # compression ON
+                video=True,
                 supports_streaming=True,
                 force_document=False
             )
 
     await client.disconnect()
 
-with client:
-    client.loop.run_until_complete(main())
-
-
-
-    
-
+if __name__ == "__main__":
+    asyncio.run(main())
