@@ -40,6 +40,11 @@ jobs:
         run: |
           python latest2.py
 
+      - name: Debug videos folder
+        run: |
+          echo "Videos folder content:"
+          ls -lh videos || echo "videos folder missing"       
+
       - name: Send video via Telethon
         env:
           API_ID: ${{ secrets.API_ID }}
