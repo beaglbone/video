@@ -131,29 +131,20 @@ def process_link(page, link):
 # Main runner
 # =========================
 def run():
-
-    processed_links = set()
-
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(ignore_https_errors=True)
 
-        print("📡 Watching links.txt for new links...")
+        links = read_links()
+        for link in links:
+            print(f"Processing: {link}")
+            page = context.new_page()
+            process_link(page, link)
+            page.close()
 
-        while True:
-            links = read_links()
-
-            for link in links:
-                if link not in processed_links:
-                    processed_links.add(link)
-
-                    print(f"\n🌐 Processing: {link}")
-                    page = context.new_page()
-                    process_link(page, link)
-                    page.close()
-
-            time.sleep(5)
+        browser.close()
 
 
 if __name__ == "__main__":
+
     run()
