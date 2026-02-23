@@ -123,10 +123,14 @@ def process_link(page, link):
     try:
         page.goto(link, wait_until="domcontentloaded", timeout=120000)
         page.wait_for_timeout(10000)
+
+        # ✅ ADD THIS BLOCK RIGHT HERE
+        if not detected:
+            print("⚠ No .m3u8 stream detected for this link")
+
     except Exception as e:
         print(f"⚠ Failed loading: {link}")
         print(e)
-
 # =========================
 # Main runner
 # =========================
@@ -148,3 +152,4 @@ def run():
 if __name__ == "__main__":
 
     run()
+
