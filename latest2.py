@@ -200,31 +200,31 @@ def check_protection(m3u8_url, page, context):
     
     
     
-def force_h264_via_ui(page):
-    try:
-        print("🎭 Trying to force H.264 via player UI")
+# def force_h264_via_ui(page):
+#     try:
+#         print("🎭 Trying to force H.264 via player UI")
 
-        # Click video to ensure player is focused
-        page.click("video", timeout=5000)
+#         # Click video to ensure player is focused
+#         page.click("video", timeout=5000)
 
-        page.wait_for_timeout(1000)
+#         page.wait_for_timeout(1000)
 
-        # Try opening settings (this is generic, may vary)
-        page.keyboard.press("ArrowDown")
-        page.wait_for_timeout(500)
+#         # Try opening settings (this is generic, may vary)
+#         page.keyboard.press("ArrowDown")
+#         page.wait_for_timeout(500)
 
-        # Try clicking common quality labels
-        for label in ["480p", "360p", "720p"]:
-            try:
-                page.click(f"text={label}", timeout=2000)
-                print(f"🎚️ Selected quality: {label}")
-                page.wait_for_timeout(2000)
-                break
-            except:
-                continue
+#         # Try clicking common quality labels
+#         for label in ["480p", "360p", "720p"]:
+#             try:
+#                 page.click(f"text={label}", timeout=2000)
+#                 print(f"🎚️ Selected quality: {label}")
+#                 page.wait_for_timeout(2000)
+#                 break
+#             except:
+#                 continue
 
-    except Exception as e:
-        print("⚠ UI interaction failed:", e)    
+#     except Exception as e:
+#         print("⚠ UI interaction failed:", e)    
     
 
 # =========================
@@ -318,6 +318,7 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
 
 
