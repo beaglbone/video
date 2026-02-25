@@ -137,8 +137,8 @@ def download_stream(stream_url, title, page, context):
         "-reconnect", "1",
         "-reconnect_streamed", "1",
         "-reconnect_delay_max", "10",
-        "-ss", "10",              # 👈 skip first 10 seconds
         "-i", stream_url,
+        "-ss", "10",
         # "-map", "0:v:m:codec:avc",  # 👈 skip AV1
         # "-map", "0:a?",
         "-c", "copy",
@@ -318,5 +318,6 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
 
