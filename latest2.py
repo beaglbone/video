@@ -132,15 +132,15 @@ def download_stream(stream_url, title, page, context):
     command = [
         "ffmpeg",
         "-y",
-        "-headers", headers,          # ✅ THIS LINE IS THE FIX
+        "-headers", headers,
+        "-protocol_whitelist", "file,http,https,tcp,tls,crypto",
+        "-allowed_extensions", "ALL",
         "-threads", "0",
         "-reconnect", "1",
         "-reconnect_streamed", "1",
         "-reconnect_delay_max", "10",
         "-i", stream_url,
         "-ss", "10",
-        # "-map", "0:v:m:codec:avc",  # 👈 skip AV1
-        # "-map", "0:a?",
         "-c", "copy",
         "-bsf:a", "aac_adtstoasc",
         video_path
@@ -330,6 +330,7 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
 
 
