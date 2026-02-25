@@ -246,9 +246,10 @@ def process_link(page, link, context):
     m3u8_urls = set()
 
     def handle_response(response):
-        if ".m3u8" in response.url:
-            m3u8_urls.add(response.url)
-            print("📡 Found stream:", response.url)
+        url = response.url
+        if "_TPL_" in url and url.endswith(".m3u8"):
+            m3u8_urls.add(url)
+            print("📡 Found MASTER stream:", url)
 
     page.on("response", handle_response)
 
@@ -271,10 +272,17 @@ def process_link(page, link, context):
             print("⚠ No stream found")
             return
 
-        def score(url):
-            return "av1" in url.lower()
+        detected_url = next(iter(m3u8_urls))
 
-        sorted_m3u8 = sorted(m3u8_urls, key=score)
+        # ✅ ADD THIS BLOCK HERE
+        if "_TPL_" not in detected_url:
+            print("❌ Not a master playlist, skipping")
+            return
+        
+        print("🎯 Using master playlist:", detected_url)
+        
+        # ⬇️ ffmpeg call / downloader
+        
         detected_url = sorted_m3u8[0]
 
         print(f"🎯 Using master playlist: {detected_url}")
@@ -330,6 +338,7 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
 
 
