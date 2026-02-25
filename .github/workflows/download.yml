@@ -46,6 +46,11 @@ jobs:
         run: |
           echo "${{ inputs.link }}" > links.txt
 
+      - name: Verify ffmpeg path
+        run: |
+          which ffmpeg
+          ffmpeg -version    
+      
       - name: Run downloader
         run: |
           python latest2.py
