@@ -1,160 +1,4 @@
-# from playwright.sync_api import sync_playwright
-# import subprocess
-# import os
-# import time
-# import requests
-
-# LINKS_FILE = "links.txt"
-# VIDEO_FOLDER = "videos"
-# TARGET_HEIGHT = 480   # change to 720 / 480 / 360
-
-# # =========================
-# # Create videos folder
-# # =========================
-# if not os.path.exists(VIDEO_FOLDER):
-#     os.makedirs(VIDEO_FOLDER)
-
-# # =========================
-# # Read links safely
-# # =========================
-# def read_links():
-#     if not os.path.exists(LINKS_FILE):
-#         return []
-#     with open(LINKS_FILE, "r") as f:
-#         return [line.strip() for line in f if line.strip()]
-
-# # =========================
-# # Select correct quality from master m3u8
-# # =========================
-# def get_quality_stream(master_url):
-#     try:
-#         response = requests.get(master_url, timeout=10)
-#         content = response.text.splitlines()
-
-#         streams = []
-#         for i in range(len(content)):
-#             if "RESOLUTION=" in content[i]:
-#                 line = content[i]
-#                 resolution = line.split("RESOLUTION=")[1].split(",")[0]
-#                 height = int(resolution.split("x")[1])
-#                 stream_url = content[i + 1]
-
-#                 if not stream_url.startswith("http"):
-#                     base = master_url.rsplit("/", 1)[0]
-#                     stream_url = base + "/" + stream_url
-
-#                 streams.append((height, stream_url))
-
-#         # sort by closest to TARGET_HEIGHT
-#         streams.sort(key=lambda x: abs(x[0] - TARGET_HEIGHT))
-
-#         if streams:
-#             print(f"🎯 Selected {streams[0][0]}p stream")
-#             return streams[0][1]
-
-#         return master_url
-
-#     except Exception as e:
-#         print("⚠ Could not parse quality, using original stream.")
-#         return master_url
-
-# # =========================
-# # Fast download (no re-encode)
-# # =========================
-# def download_stream(stream_url, title):
-
-#     safe_title = "".join(c for c in title if c.isalnum() or c in " _-")
-#     video_path = os.path.join(VIDEO_FOLDER, f"{safe_title}.mp4")
-#     meta_path = os.path.join(VIDEO_FOLDER, f"{safe_title}.txt")
-
-#     # Select proper quality
-#     stream_url = get_quality_stream(stream_url)
-
-#     # command = [
-#         # "ffmpeg",
-#         # "-threads", "0",
-#         # "-http_persistent", "1",
-#         # "-multiple_requests", "1",
-#         # "-buffer_size", "50M",
-#         # "-i", stream_url,
-#         # "-c", "copy",
-#         # video_path
-#     # ]
-    
-#     command = [
-#     "ffmpeg",
-#     "-threads", "0",
-#     "-i", stream_url,
-#     "-c", "copy",
-#     "-bsf:a", "aac_adtstoasc",
-#     video_path
-#     ]
-
-#     print(f"\n⬇️ Downloading: {safe_title}")
-#     subprocess.run(command)
-
-#     with open(meta_path, "w", encoding="utf-8") as f:
-#         f.write(f"Title: {title}\n")
-#         f.write(f"Stream URL: {stream_url}\n")
-#         f.write(f"Selected Height: {TARGET_HEIGHT}p\n")
-
-#     print(f"✅ Saved: {video_path}")
-
-# # =========================
-# # Process link safely
-# # =========================
-# def process_link(page, link):
-
-#     detected = False
-
-#     def handle_response(response):
-#         nonlocal detected
-#         if detected:
-#             return
-
-#         if ".m3u8" in response.url:
-#             detected = True
-#             print("🔥 Stream Found")
-#             title = page.title()
-#             download_stream(response.url, title)
-
-#     page.on("response", handle_response)
-
-#     try:
-#         page.goto(link, wait_until="domcontentloaded", timeout=120000)
-#         page.wait_for_timeout(10000)
-
-#         # ✅ ADD THIS BLOCK RIGHT HERE
-#         if not detected:
-#             print("⚠ No .m3u8 stream detected for this link")
-
-#     except Exception as e:
-#         print(f"⚠ Failed loading: {link}")
-#         print(e)
-# # =========================
-# # Main runner
-# # =========================
-# def run():
-#     with sync_playwright() as p:
-#         browser = p.chromium.launch(headless=True)
-#         context = browser.new_context(ignore_https_errors=True)
-
-#         links = read_links()
-#         for link in links:
-#             print(f"Processing: {link}")
-#             page = context.new_page()
-#             process_link(page, link)
-#             page.close()
-
-#         browser.close()
-
-
-# if __name__ == "__main__":
-
-#     run()
-
-
-
+import re
 from playwright.sync_api import sync_playwright
 import subprocess
 import os
@@ -184,12 +28,44 @@ def read_links():
 # =========================
 # Select closest quality stream
 # =========================
+# def get_quality_stream(master_url):
+    # try:
+        # response = requests.get(master_url, timeout=15)
+        # content = response.text.splitlines()
+
+        # streams = []
+        # for i in range(len(content)):
+            # if "RESOLUTION=" in content[i]:
+                # resolution = content[i].split("RESOLUTION=")[1].split(",")[0]
+                # height = int(resolution.split("x")[1])
+                # stream_url = content[i + 1]
+
+                # if not stream_url.startswith("http"):
+                    # base = master_url.rsplit("/", 1)[0]
+                    # stream_url = f"{base}/{stream_url}"
+
+                # streams.append((height, stream_url))
+
+        # streams.sort(key=lambda x: abs(x[0] - TARGET_HEIGHT))
+
+        # if streams:
+            # print(f"🎯 Selected {streams[0][0]}p stream")
+            # return streams[0][1]
+
+        # return master_url
+
+    # except Exception as e:
+        # print("⚠ Quality parse failed, using original stream")
+        # return master_url
+        
 def get_quality_stream(master_url):
     try:
         response = requests.get(master_url, timeout=15)
         content = response.text.splitlines()
 
-        streams = []
+        av1_streams = []
+        normal_streams = []
+
         for i in range(len(content)):
             if "RESOLUTION=" in content[i]:
                 resolution = content[i].split("RESOLUTION=")[1].split(",")[0]
@@ -200,37 +76,68 @@ def get_quality_stream(master_url):
                     base = master_url.rsplit("/", 1)[0]
                     stream_url = f"{base}/{stream_url}"
 
-                streams.append((height, stream_url))
+                # classify
+                if "av1" in stream_url.lower():
+                    av1_streams.append((height, stream_url))
+                else:
+                    normal_streams.append((height, stream_url))
 
-        streams.sort(key=lambda x: abs(x[0] - TARGET_HEIGHT))
+        # sort by closest resolution
+        normal_streams.sort(key=lambda x: abs(x[0] - TARGET_HEIGHT))
+        av1_streams.sort(key=lambda x: abs(x[0] - TARGET_HEIGHT))
 
-        if streams:
-            print(f"🎯 Selected {streams[0][0]}p stream")
-            return streams[0][1]
+        # 🎯 FIRST choice: non-AV1
+        if normal_streams:
+            print(f"🎯 Selected {normal_streams[0][0]}p (non-AV1)")
+            return normal_streams[0][1]
+
+        # fallback: AV1 only if nothing else exists
+        if av1_streams:
+            print(f"⚠ Only AV1 available: {av1_streams[0][0]}p")
+            return av1_streams[0][1]
 
         return master_url
 
-    except Exception as e:
+    except Exception:
         print("⚠ Quality parse failed, using original stream")
-        return master_url
+        return master_url        
+        
 
 # =========================
 # Download stream using ffmpeg
 # =========================
-def download_stream(stream_url, title):
+def download_stream(stream_url, title, page, context):
+    # 🔐 Extract browser cookies from Playwright
+    cookies = context.cookies()
+    cookie_header = "; ".join(f"{c['name']}={c['value']}" for c in cookies)
+    headers = (
+    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\r\n"
+    "Referer: https://www.xhamster.com/\r\n"
+    "Origin: https://www.xhamster.com\r\n"
+    f"Cookie: {cookie_header}\r\n"
+    )
     safe_title = "".join(c for c in title if c.isalnum() or c in " _-")[:200]
     video_path = os.path.join(VIDEO_FOLDER, f"{safe_title}.mp4")
     meta_path = os.path.join(VIDEO_FOLDER, f"{safe_title}.txt")
 
-    stream_url = get_quality_stream(stream_url)
+
+    # stream_url = get_quality_stream(stream_url)
+
+    # 🔒 FINAL protection check (this was missing)
+    # protection = check_protection(stream_url, page, context)
+    # if protection == "HIGH_PROTECTION":
+        # print("🔒 High-protection quality stream (403) — skipping")
+        # return
 
     command = [
         "ffmpeg",
         "-y",
+        "-headers", headers,          # ✅ THIS LINE IS THE FIX
         "-threads", "0",
         "-reconnect", "1",
         "-reconnect_streamed", "1",
         "-reconnect_delay_max", "10",
+        "-ss", "10",              # 👈 skip first 10 seconds
         "-i", stream_url,
         "-c", "copy",
         "-bsf:a", "aac_adtstoasc",
@@ -250,45 +157,124 @@ def download_stream(stream_url, title):
         f.write(f"Target Height: {TARGET_HEIGHT}p\n")
 
     print(f"✅ Saved: {video_path}")
+    
+
+def check_protection(m3u8_url, page, context):
+    try:
+        # get cookies from browser
+        cookies = context.cookies()
+        cookie_header = "; ".join(
+            f"{c['name']}={c['value']}" for c in cookies
+        )
+
+        # get real browser UA
+        user_agent = page.evaluate("navigator.userAgent")
+
+        headers = {
+            "User-Agent": user_agent,
+            "Referer": page.url,
+            "Cookie": cookie_header
+        }
+
+        r = requests.get(
+            m3u8_url,
+            headers=headers,
+            timeout=10,
+            stream=True
+        )
+
+        if r.status_code == 403:
+            return "HIGH_PROTECTION"
+
+        if r.status_code == 200:
+            return "OK"
+
+        return f"UNKNOWN_{r.status_code}"
+
+    except Exception as e:
+        return f"ERROR_{e}"    
+    
+    
+    
+    
+    
+def force_h264_via_ui(page):
+    try:
+        print("🎭 Trying to force H.264 via player UI")
+
+        # Click video to ensure player is focused
+        page.click("video", timeout=5000)
+
+        page.wait_for_timeout(1000)
+
+        # Try opening settings (this is generic, may vary)
+        page.keyboard.press("ArrowDown")
+        page.wait_for_timeout(500)
+
+        # Try clicking common quality labels
+        for label in ["480p", "360p", "720p"]:
+            try:
+                page.click(f"text={label}", timeout=2000)
+                print(f"🎚️ Selected quality: {label}")
+                page.wait_for_timeout(2000)
+                break
+            except:
+                continue
+
+    except Exception as e:
+        print("⚠ UI interaction failed:", e)    
+    
 
 # =========================
 # Process single link (ROBUST)
 # =========================
-def process_link(page, link):
-    detected = False
-    detected_url = None
+def process_link(page, link, context):
+    m3u8_urls = set()
 
     def handle_response(response):
-        nonlocal detected, detected_url
-        if detected:
-            return
-
         if ".m3u8" in response.url:
-            detected = True
-            detected_url = response.url
-            print("🔥 .m3u8 stream detected")
+            m3u8_urls.add(response.url)
+            print("📡 Found stream:", response.url)
 
     page.on("response", handle_response)
 
     try:
         page.goto(link, wait_until="domcontentloaded", timeout=120000)
 
+        # 🔥 NEW: force UI interaction
+        force_h264_via_ui(page)
+
         waited = 0
         while waited < MAX_WAIT_SECONDS:
-            if detected:
-                break
-            page.wait_for_timeout(CHECK_INTERVAL * 1000)
-            waited += CHECK_INTERVAL
+            page.wait_for_timeout(1000)
+            waited += 1
 
-        if not detected:
-            print("⚠ No stream detected within timeout")
+            # stop early if multiple playlists appear
+            if len(m3u8_urls) >= 2 and waited >= 5:
+                break
+
+        if not m3u8_urls:
+            print("⚠ No stream found")
             return
 
+        def score(url):
+            return "av1" in url.lower()
+
+        sorted_m3u8 = sorted(m3u8_urls, key=score)
+        detected_url = sorted_m3u8[0]
+
+        print(f"🎯 Using master playlist: {detected_url}")
+
         title = page.title()
-        download_stream(detected_url, title)
+        download_stream(detected_url, title, page, context)
 
     except Exception as e:
-        print(f"⚠ Page load failed: {e}")
+        print(f"⚠ Error: {e}")
+
+
+
+
+
 
 # =========================
 # Main runner (CI SAFE)
@@ -320,7 +306,7 @@ def run():
         for link in links:
             print(f"\n🌐 Processing: {link}")
             page = context.new_page()
-            process_link(page, link)
+            process_link(page, link, context)
             page.close()
 
         browser.close()
