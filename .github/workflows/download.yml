@@ -17,10 +17,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      # - name: Install system dependencies
+      #   run: |
+      #     sudo apt update
+      #     sudo apt install -y ffmpeg
+
+      - name: Install FFmpeg (static)
         run: |
           sudo apt update
-          sudo apt install -y ffmpeg
+          sudo apt install -y wget xz-utils
+          wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          tar -xf ffmpeg-release-amd64-static.tar.xz
+          sudo mv ffmpeg-*-static/ffmpeg /usr/local/bin/ffmpeg
+          sudo mv ffmpeg-*-static/ffprobe /usr/local/bin/ffprobe
+          ffmpeg -version
 
       - name: Setup Python
         uses: actions/setup-python@v5
