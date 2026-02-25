@@ -147,11 +147,22 @@ def download_stream(stream_url, title, page, context):
     ]
 
     print(f"\n⬇️ Downloading: {safe_title}")
-    result = subprocess.run(command)
+        result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    
+    print("----- FFMPEG STDOUT -----")
+    print(result.stdout)
+    print("----- FFMPEG STDERR -----")
+    print(result.stderr)
 
     if result.returncode != 0:
-        print("❌ ffmpeg failed")
-        return
+    print("❌ ffmpeg failed")
+    return
+
 
     with open(meta_path, "w", encoding="utf-8") as f:
         f.write(f"Title: {title}\n")
@@ -318,6 +329,7 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
 
 
