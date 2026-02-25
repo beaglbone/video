@@ -139,8 +139,8 @@ def download_stream(stream_url, title, page, context):
         "-reconnect_delay_max", "10",
         "-ss", "10",              # 👈 skip first 10 seconds
         "-i", stream_url,
-        "-map", "0:v:m:codec:avc",  # 👈 skip AV1
-        "-map", "0:a?",
+        # "-map", "0:v:m:codec:avc",  # 👈 skip AV1
+        # "-map", "0:a?",
         "-c", "copy",
         "-bsf:a", "aac_adtstoasc",
         video_path
@@ -318,4 +318,5 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
