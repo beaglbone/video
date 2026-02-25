@@ -256,6 +256,21 @@ def process_link(page, link, context):
     try:
         page.goto(link, wait_until="domcontentloaded", timeout=120000)
 
+        # 👇 FORCE video playback (VERY IMPORTANT)
+        page.wait_for_timeout(2000)
+        
+        try:
+            page.evaluate("""
+                const v = document.querySelector('video');
+                if (v) {
+                    v.muted = true;
+                    v.play();
+                }
+            """)
+            print("▶️ Video play triggered")
+        except:
+            print("⚠ Could not auto-play video")
+
         # 🔥 NEW: force UI interaction
         # force_h264_via_ui(page)
 
@@ -271,13 +286,24 @@ def process_link(page, link, context):
         if not m3u8_urls:
             print("⚠ No stream found")
             return
+        
+        # ✅ Prefer non-AV1 streams
+        def score(url):
+            return "av1" in url.lower()
+        
+        detected_url = sorted(m3u8_urls, key=score)[0]
+        
+        print("🎯 Using playlist:", detected_url)
+        
+        title = page.title()
+        download_stream(detected_url, title, page, context)
 
         detected_url = next(iter(m3u8_urls))
 
         # ✅ ADD THIS BLOCK HERE
-        if "_TPL_" not in detected_url:
-            print("❌ Not a master playlist, skipping")
-            return
+        # if "_TPL_" not in detected_url:
+        #     print("❌ Not a master playlist, skipping")
+        #     return
         
         print("🎯 Using master playlist:", detected_url)
         
@@ -338,6 +364,7 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
 
 
