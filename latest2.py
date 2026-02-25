@@ -244,7 +244,7 @@ def process_link(page, link, context):
         page.goto(link, wait_until="domcontentloaded", timeout=120000)
 
         # 🔥 NEW: force UI interaction
-        force_h264_via_ui(page)
+        # force_h264_via_ui(page)
 
         waited = 0
         while waited < MAX_WAIT_SECONDS:
@@ -318,6 +318,7 @@ def run():
 # =========================
 if __name__ == "__main__":
     run()
+
 
 
 
